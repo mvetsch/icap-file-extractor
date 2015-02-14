@@ -17,14 +17,34 @@ def handle(connection, address):
                 logger.debug("Socket closed remotely")
                 break
             logger.debug("Received data %r", data)
-            connection.sendall(data)
-            logger.debug("Sent data")
+	    
+	    request = Request(data)
+	    if request.isValid():
+	    	connection.sendall(request.response());
+		logger.debug("Response Sent") 
+	    else:
+		logger.debug("Received invalid Request")
+		raise TypeError("Invalid Request") 
     except:
         logger.exception("Problem handling request")
     finally:
         logger.debug("Closing socket")
         connection.close()
 
+class Request(object):
+    INVALID = "INVALID"
+    def __init__(self, data):
+	self.method = self.INVALID
+	self.data = data
+    
+    def response(self):
+	if not self.isValid():
+		raise TypeError("Request is Invalid, no response available")
+	return "irrelevant"
+
+    def isValid(self): 
+	return self.method != self.INVALID
+	
 class Server(object):
     def __init__(self, hostname, port):
         import logging
@@ -49,7 +69,7 @@ class Server(object):
 if __name__ == "__main__":
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    server = Server("127.0.0.1", 1344))
+    server = Server("127.0.0.1", 1344)
     try:
         logging.info("Listening")
         server.start()
