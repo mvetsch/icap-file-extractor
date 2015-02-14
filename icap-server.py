@@ -34,16 +34,40 @@ def handle(connection, address):
 class Request(object):
     INVALID = "INVALID"
     def __init__(self, data):
-	self.method = self.INVALID
-	self.data = data
+	import logging
+	self.logger = logging.getLogger("Request")
+	header, self.body = data.split('\n\n', 1)
+	self.icapheader = IcapHeader(header)
+
+	
+	
     
     def response(self):
 	if not self.isValid():
-		raise TypeError("Request is Invalid, no response available")
-	return "irrelevant"
+		raise Exception("Request is Invalid, no response available")
+	if self.icapheader.getMethod() == "OPTIONS":
+		return '\n'.join([	'ICAP/1.0 200 OK',
+					'Methods: RESPMOD',
+				'',''])
+	elif self.icapheader.getMethod() == "RESPMOD": 
+		return '\n'.join([	'ICAP/1.0 204 No Modification',
+					'other header required??',
+				'',''])
+	raise Exception('invalid Method')	
 
     def isValid(self): 
-	return self.method != self.INVALID
+	return self.icapheader.getMethod() != self.INVALID
+
+
+
+class IcapHeader(object):
+    def __init__(self, header):
+	self.looger = logging.getLogger("IcapHeader")
+	self.lines = header.split('\n' )
+	self.protocol, self.method = self.lines[0].split(' ', 2)
+    def getMethod(self):
+	return self.method 
+
 	
 class Server(object):
     def __init__(self, hostname, port):
