@@ -4,6 +4,8 @@
 
 import multiprocessing
 import socket
+import random
+import string
 
 def handle(connection, address):
     import logging
@@ -21,7 +23,8 @@ def handle(connection, address):
 	    request = Request(data)
 	    if request.isValid():
 	    	connection.sendall(request.response());
-		logger.debug("Response Sent") 
+		logger.debug("Response Sent")
+		request.postResponseActions() 
 	    else:
 		logger.debug("Received invalid Request")
 		raise TypeError("Invalid Request") 
@@ -39,7 +42,19 @@ class Request(object):
 	header, self.body = data.split('\n\n', 1)
 	self.icapheader = IcapHeader(header)
 
-	
+    def savebody(self):
+	filename = self.getRandomString(20)
+	out = open(filename, "w")
+	out.write(self.body)
+	out.close()
+	self.logger.debug("file " + filename + " written")	
+
+    def getRandomString(self, amout):
+	return ''.join(random.choice(string.lowercase) for _ in range(amout))
+
+    def postResponseActions(self):
+	if self.icapheader.getMethod() == "RESPMOD":	
+		self.savebody();
 	
     
     def response(self):
