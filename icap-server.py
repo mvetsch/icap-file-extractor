@@ -66,6 +66,10 @@ class Server(object):
             process.start()
             self.logger.debug("Started process %r", process)
 
+
+    def stop(self):
+	self.socket.close()
+
 if __name__ == "__main__":
     import logging
     logging.basicConfig(level=logging.DEBUG)
@@ -77,6 +81,7 @@ if __name__ == "__main__":
         logging.exception("Unexpected exception")
     finally:
         logging.info("Shutting down")
+	server.stop()
         for process in multiprocessing.active_children():
             logging.info("Shutting down process %r", process)
             process.terminate()
